@@ -1,0 +1,30 @@
+# Виртуальное окружение
+venv/
+env/
+.venv/
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Базы данных и логи
+*.db
+*.sqlite
+*.log
+
+# Файлы окружения (секреты)
+.env
+.env.local
+
+# Файлы операционной системы
+.DS_Store
+Thumbs.db
