@@ -10,6 +10,7 @@ class CustomRequester:
         self.headers = self.base_headers.copy()
         self.session.headers.update(self.base_headers)
 
-    def send_request(self, method, url, data=None):
+    def send_request(self, method, endpoint, data=None):
+        url = f'{self.base_url}{endpoint}'
         response = self.session.request(method, url, json=data)
         return response
