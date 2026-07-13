@@ -1,70 +1,71 @@
-import pytest
 import requests
-from custom_requester.custom_requester import CustomRequester
-from faker import Faker
+import pytest
+from clients.api_manager import ApiManager
+from utils.data_generator import DataGenerator
 
-fake = Faker()
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def session():
-    return requests.Session()
-
-@pytest.fixture
-def requester(session):
-    return CustomRequester(
-        session=session,
-        base_url='https://auth.dev-cinescope.coconutqa.ru'
-    )
-
-@pytest.fixture
-def requester_movie(session):
-    return CustomRequester(
-        session=session,
-        base_url='https://api.dev-cinescope.coconutqa.ru'
-    )
-
-@pytest.fixture
-def user_id(requester):
-    # Создаём пользователя
-    resp = requester.send_request(
-        'POST',
-        '/register',
-        data={
-            "email": fake.email(),
-            "fullName": "Test User",
-            "password": "12345678Aa",
-            "passwordRepeat": "12345678Aa"
-        },
-        expected_status=201
-    )
-    assert resp.status_code == 201
-    return resp.json()["id"]
-
-@pytest.fixture
-def admin_requester(requester):
-    resp = requester.send_request(
-        'POST',
-        '/login',
-        data={
-        'email': 'api1@gmail.com',
-        'password': 'asdqwe123Q'
-    },
-        expected_status=201
-    )
-    token = resp.json()["accessToken"]
-    requester.update_session_headers({"Authorization": f"Bearer {token}"})
-    return requester
+    http_session = requests.Session()
+    yield http_session
+    http_session.close()
 
 
-@pytest.fixture
-def user_credentials(requester):
-    email = fake.email()
-    password = "12345678Aa"
+@pytest.fixture(scope="session")
+def api_manager(session):
+    return ApiManager(session)
 
-    requester.send_request('POST', '/register', data={
-        "email": email,
-        "fullName": "Test User",
+
+@pytest.fixture(scope="function")
+def test_user():
+    password = DataGenerator.generate_random_password()
+    return {
+        "email": DataGenerator.generate_random_email(),
+        "fullName": DataGenerator.generate_random_name(),
         "password": password,
-        "passwordRepeat": password
-    }, expected_status=201)
-    return {"email": email, "password": password}
+        "passwordRepeat": password,
+        "roles": ["USER"]
+    }
+
+
+@pytest.fixture(scope="function")
+def registered_user(api_manager, test_user):
+    response = api_manager.auth_api.register_user(test_user).json()
+    test_user["id"] = response["id"]
+    return test_user
+
+@pytest.fixture(scope="session")
+def unauth_api_manager():
+    session = requests.Session()
+    return ApiManager(session)
+
+@pytest.fixture
+def authenticated_user(api_manager, test_user):
+    response = api_manager.auth_api.register_user(test_user)
+    user_data = response.json()
+
+    api_manager.auth_api.authenticate((test_user['email'], test_user['password']))
+
+    user_data['password'] = test_user['password']
+    return user_data
+
+@pytest.fixture
+def admin_api_manager(api_manager):
+    api_manager.auth_api.authenticate(('api1@gmail.com', 'asdqwe123Q'))
+    return api_manager
+
+@pytest.fixture
+def multiple_users(api_manager):
+    ids = []
+    for _ in range(3):
+        password = DataGenerator.generate_random_password()
+        data = {
+            "email": DataGenerator.generate_random_email(),
+            "fullName": DataGenerator.generate_random_name(),
+            "password": password,
+            "passwordRepeat": password,
+            "roles": ["USER"]
+        }
+        response = api_manager.auth_api.register_user(data)
+        ids.append(response.json()['id'])
+    return ids

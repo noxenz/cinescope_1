@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 
 
 class CustomRequester:
@@ -16,12 +17,14 @@ class CustomRequester:
         self.session.headers.update(self.base_headers)
         self.logger = logging.getLogger(__name__)
 
-    def send_request(self, method, endpoint, data=None, params=None, expected_status=200, need_logging=True):
+    def send_request(self, method, endpoint, data=None, params=None, expected_status=200, need_logging=True, **kwargs):
         url = f'{self.base_url}{endpoint}'
-        response = self.session.request(method, url, json=data, params=params)
+        start_time = time.time()
+        response = self.session.request(method, url, json=data, params=params, **kwargs)
+        elapsed_ms = round((time.time() - start_time) * 1000, 2)
 
         if need_logging:
-            self.log_request_and_response(response)
+            self.log_request_and_response(response, elapsed_ms)
 
         if response.status_code != expected_status:
             raise ValueError(
@@ -30,10 +33,14 @@ class CustomRequester:
 
         return response
 
-    def update_session_headers(self, headers: dict):
+    def _update_session_headers(self, headers: dict):
         self.session.headers.update(headers)
 
-    def log_request_and_response(self, response):
+    def _reset_headers(self):
+        self.session.headers.clear()
+        self.session.headers.update(self.base_headers)
+
+    def log_request_and_response(self, response, elapsed_ms):
         try:
             request = response.request
             GREEN = '\033[32m'
@@ -77,6 +84,7 @@ class CustomRequester:
             else:
                 self.logger.info(
                     f"\tSTATUS_CODE: {GREEN}{response_status}{RESET}\n"
+                    f'{elapsed_ms} ms\n'
                     f"\tDATA:\n{response_data}"
                 )
             self.logger.info(f"{'=' * 80}\n")

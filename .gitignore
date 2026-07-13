@@ -28,3 +28,6 @@ __pycache__/
 # Файлы операционной системы
 .DS_Store
 Thumbs.db
+
+cr.py
+args and kwargs.py
