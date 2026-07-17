@@ -47,20 +47,20 @@ def test_get_movies(requester_movie):
     )
     assert response.status_code == 200
 
-def test_register_user(auth_api, test_user):
-    response = auth_api.register_user(test_user)
-    assert response.json()['email'] == test_user['email']
-
-def test_login_user(auth_api, login_data):
-    response = auth_api.login_user(login_data)
-    assert response.status_code == 201
-
-def test_logout_user(auth_api, login_data):
-    login_response = auth_api.login_user(login_data)
-    assert login_response.status_code == 201
-
-    logout_response = auth_api.logout_user()
-    assert logout_response.status_code == 200
+# def test_register_user(auth_api, test_user):
+#     response = auth_api.register_user(test_user)
+#     assert response.json()['email'] == test_user['email']
+#
+# def test_login_user(auth_api, login_data):
+#     response = auth_api.login_user(login_data)
+#     assert response.status_code == 201
+#
+# def test_logout_user(auth_api, login_data):
+#     login_response = auth_api.login_user(login_data)
+#     assert login_response.status_code == 201
+#
+#     logout_response = auth_api.logout_user()
+#     assert logout_response.status_code == 200
 
 class TestAuth:
     def test_register_user(self, api_manager, test_user):
