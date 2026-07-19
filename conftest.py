@@ -1,7 +1,11 @@
 import requests
 import pytest
+import os
+from dotenv import load_dotenv
 from clients.api_manager import ApiManager
 from utils.data_generator import DataGenerator
+
+load_dotenv()
 
 
 @pytest.fixture(scope="session")
@@ -10,11 +14,9 @@ def session():
     yield http_session
     http_session.close()
 
-
 @pytest.fixture(scope="session")
 def api_manager(session):
     return ApiManager(session)
-
 
 @pytest.fixture(scope="function")
 def test_user():
@@ -27,28 +29,23 @@ def test_user():
         "roles": ["USER"]
     }
 
-
 @pytest.fixture(scope="function")
 def registered_user(api_manager, test_user):
     response = api_manager.auth_api.register_user(test_user).json()
     test_user["id"] = response["id"]
     return test_user
 
+@pytest.fixture
+def login_data(registered_user):
+    return {
+        'email': registered_user['email'],
+        'password': registered_user['password']
+    }
+
 @pytest.fixture(scope="session")
 def unauth_api_manager():
     session = requests.Session()
     return ApiManager(session)
-
-@pytest.fixture
-def authenticated_user(api_manager, test_user):
-    response = api_manager.auth_api.register_user(test_user)
-    user_data = response.json()
-
-    api_manager.auth_api.authenticate((test_user['email'], test_user['password']))
-
-    user_data['password'] = test_user['password']
-    return user_data
-
 
 @pytest.fixture
 def user_api_manager():
@@ -62,15 +59,22 @@ def user_api_manager():
         "passwordRepeat": password,
         "roles": ["USER"]
     }
-    api_manager.auth_api.register_user(user_data)
+    response = api_manager.auth_api.register_user(user_data)
+    user_id = response.json()['id']
 
-    # 2. Логинимся под ним
     api_manager.auth_api.authenticate((user_data['email'], password))
-    return api_manager
+    api_manager.user_id = user_id
+    yield api_manager
+
+    api_manager.user_api.delete_user(user_id)
 
 @pytest.fixture
-def admin_api_manager(api_manager):
-    api_manager.auth_api.authenticate(('api1@gmail.com', 'asdqwe123Q'))
+def admin_api_manager():
+    session = requests.Session()
+    api_manager = ApiManager(session)
+    email = os.getenv('ADMIN_EMAIL')
+    password = os.getenv('ADMIN_PASSWORD')
+    api_manager.auth_api.authenticate((email, password))
     return api_manager
 
 @pytest.fixture
@@ -115,10 +119,12 @@ def create_movie(admin_api_manager, movie_data):
     yield movie
 
     try:
-        admin_api_manager.movies_api.get_movie_by_id(movie['id'])
         admin_api_manager.movies_api.delete_movie_by_id(movie['id'])
-    except Exception:
-        pass
+    except ValueError as e:
+        if '404' in str(e):
+            pass
+        else:
+            raise
 
 @pytest.fixture
 def review_data():

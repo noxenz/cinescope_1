@@ -1,12 +1,13 @@
 from faker import Faker
 import random
+import uuid
 
 fake = Faker()
 
 class DataGenerator:
     @staticmethod
     def generate_random_email():
-        return fake.email()
+        return f'{fake.user_name()}{random.randint(1000, 999999)}@example.com'
 
     @staticmethod
     def generate_random_password():
@@ -20,7 +21,7 @@ class DataGenerator:
 
     @staticmethod
     def generate_random_name():
-        return fake.first_name() + ' ' + fake.last_name()
+        return fake.first_name() + ' ' + fake.last_name() + str(uuid.uuid4())
 
     @staticmethod
     def generate_random_price():

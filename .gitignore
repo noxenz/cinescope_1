@@ -17,4 +17,3 @@ __pycache__/
 .env.local
 .DS_Store
 Thumbs.db
-cr.py
