@@ -60,7 +60,7 @@ class MoviesApi(CustomRequester):
             **kwargs
         )
 
-    def post_movie_review_by_id(self, movie_id, review_data, expected_status=201, **kwargs): # В доке ожидается статус 200, по факту 201
+    def post_movie_review_by_id(self, movie_id, review_data, expected_status=201, **kwargs):
         return self.send_request(
             method='POST',
             endpoint=f'{MOVIES}/{movie_id}{REVIEWS}',

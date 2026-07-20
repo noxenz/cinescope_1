@@ -142,8 +142,6 @@ def update_review_data():
 
 @pytest.fixture
 def available_genres(unauth_api_manager):
-    response = unauth_api_manager.movies_api.get_movies_list()
-    data = response.json()
-
-    genres = list(set(movie['genreId'] for movie in data['movies']))
-    return genres
+    response = unauth_api_manager.genres_api.get_genres()
+    genres = response.json()
+    return [genre['id'] for genre in genres]
