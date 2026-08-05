@@ -28,7 +28,7 @@ def test_user():
         "fullName": DataGenerator.generate_random_name(),
         "password": password,
         "passwordRepeat": password,
-        "roles": 'USER'
+        "roles": [Roles.USER.value]
     }
 
 @pytest.fixture(scope="function")
