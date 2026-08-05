@@ -1,4 +1,5 @@
 import pytest
+from constants.roles import Roles
 
 class TestPositive:
     @pytest.mark.smoke
@@ -78,12 +79,34 @@ class TestPositive:
         assert data['name'] == create_movie['name']
 
     @pytest.mark.smoke
-    @pytest.mark.parametrize()
-    def test_delete_movie_by_id(self, super_admin, create_movie):
-        movie_id = create_movie['id']
-        super_admin.api.movies_api.delete_movie_by_id(movie_id)
+    @pytest.mark.parametrize('role,expected_status', [
+        (Roles.SUPER_ADMIN.value, 200),
+        (Roles.ADMIN.value, 403),
+        (Roles.USER.value, 403),
+        ('unauth', 401)
+    ], ids=['super_admin_can_delete', 'admin_cannot_delete', 'common_user_cannot_delete', 'unauth_cannot_delete'])
+    def test_delete_movie_by_id(self, request, create_movie, role, expected_status):
+        if role == 'unauth':
+            api_manager = request.getfixturevalue('unauth_api_manager')
+        else:
+            if role == Roles.SUPER_ADMIN.value:
+                user = request.getfixturevalue('super_admin')
+            elif role == Roles.ADMIN.value:
+                user = request.getfixturevalue('admin_user')
+            elif role == Roles.USER.value:
+                user = request.getfixturevalue('common_user')
+            else:
+                raise ValueError(f'Неизвестная роль {role}')
 
-        super_admin.api.movies_api.get_movie_by_id(movie_id, expected_status=404)
+            api_manager = user.api
+
+        movie_id = create_movie['id']
+        api_manager.movies_api.delete_movie_by_id(movie_id, expected_status=expected_status)
+
+        # movie_id = create_movie['id']
+        # super_admin.api.movies_api.delete_movie_by_id(movie_id)
+        #
+        # super_admin.api.movies_api.get_movie_by_id(movie_id, expected_status=404)
 
     @pytest.mark.smoke
     def test_update_movie_by_id(self, super_admin, create_movie, update_movie_data):
