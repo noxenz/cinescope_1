@@ -1,6 +1,7 @@
 """Модели песочницы. Повторяют реальную структуру ответов Cinescope /movies."""
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -13,6 +14,7 @@ class Location(str, Enum):
 class Genre(BaseModel):
     """Жанр внутри фильма. Приходит как {"name": "Драма"}."""
     name: str
+    id: Optional[int] = None
 
 class ReviewUser(BaseModel):
     """Автор отзыва. Приходит как {"fullName": "Melissa Ellis"}."""

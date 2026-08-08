@@ -19,6 +19,7 @@ print("тип page.movies         :", type(page.movies).__name__)
 print("тип page.movies[0]      :", type(page.movies[0]).__name__)
 print("тип page.movies[0].genre:", type(page.movies[0].genre).__name__)
 print("доступ через точку      :", page.movies[0].genre.name)
+print(f"id жанра: {page.movies[0].genre.id}")  # Выведет None
 
 title("2. Три уровня вложенности")
 details = MovieDetails(**payloads.MOVIE_DETAILS)
@@ -28,3 +29,28 @@ print("жанр (уровень 2)    :", details.genre.name)
 print("автор отзыва (ур. 3):", details.reviews[0].user.fullName)
 print("createdAt стал      :", type(details.createdAt).__name__)
 print("location стал       :", repr(details.location))
+
+title("3. Ошибка внутри вложенной модели")
+try:
+    MoviesPage(**payloads.BROKEN_TYPES)
+except ValidationError as e:
+    print(e)
+    print("\nloc-кортежи:")
+    for err in e.errors():
+        print("   ", err["loc"], "->", err["type"])
+
+title("4. Поломка на третьем уровне")
+try:
+    MovieDetails(**payloads.BROKEN_DEEP)
+except ValidationError as e:
+    for err in e.errors():
+        print("   ", ".".join(str(p) for p in err["loc"]), "->", err["msg"])
+
+title("5. Пропала вложенная модель")
+try:
+    MoviesPage(**payloads.MISSING_NESTED)
+except ValidationError as e:
+    for err in e.errors():
+        print("   ", err["loc"], "->", err["msg"])
+
+print(page.movies[1].genre)
