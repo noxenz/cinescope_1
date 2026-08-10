@@ -2,8 +2,12 @@
 from datetime import datetime
 from enum import Enum
 from typing import Optional
+from constants.roles import Roles
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+
+class BaseModelForbid(BaseModel):
+    model_config = ConfigDict(strict=True)
 
 class Location(str, Enum):
     MSK = "MSK"
@@ -11,26 +15,26 @@ class Location(str, Enum):
 
 # --- самые внутренние модели ---
 
-class Genre(BaseModel):
+class Genre(BaseModelForbid):
     """Жанр внутри фильма. Приходит как {"name": "Драма"}."""
     name: str
     id: Optional[int] = None
 
-class ReviewUser(BaseModel):
+class ReviewUser(BaseModelForbid):
     """Автор отзыва. Приходит как {"fullName": "Melissa Ellis"}."""
     fullName: str
 
 # --- средний уровень ---
 
-class Review(BaseModel):
+class Review(BaseModelForbid):
     userId: str
     text: str
     rating: int = Field(..., ge=0, le=5)
     createdAt: datetime
     user: ReviewUser            # вложенная модель
 
-class Movie(BaseModel):
-    id: int
+class Movie(BaseModelForbid):
+    id: int = Field(strict=True)
     name: str
     description: str
     genreId: int
@@ -44,7 +48,7 @@ class Movie(BaseModel):
 
 # --- то, что реально возвращают эндпоинты ---
 
-class MoviesPage(BaseModel):
+class MoviesPage(BaseModelForbid):
     """Ответ GET /movies - страница со списком фильмов."""
     movies: list[Movie]         # список вложенных моделей
     count: int
@@ -58,3 +62,12 @@ class MovieDetails(Movie):
     Наследуемся от Movie, чтобы не переписывать 11 полей заново.
     """
     reviews: list[Review]
+
+class TestUser(BaseModelForbid):
+    email: str
+    fullName: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=8, max_length=20)
+    passwordRepeat: str = Field(..., min_length=8, max_length=20)
+    roles: list[Roles] = [Roles.USER]
+    verified: Optional[bool] = None
+    banned: Optional[bool] = None

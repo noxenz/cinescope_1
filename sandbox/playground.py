@@ -4,7 +4,7 @@ import sys
 from pydantic import ConfigDict, ValidationError
 
 from sandbox import payloads
-from sandbox.models import Movie, MovieDetails, MoviesPage
+from sandbox.models import Movie, MovieDetails, MoviesPage, TestUser
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -53,4 +53,108 @@ except ValidationError as e:
     for err in e.errors():
         print("   ", err["loc"], "->", err["msg"])
 
-print(page.movies[1].genre)
+print(page.movies[1].genre.name)
+
+title('6. TestUser без verified и banned')
+user = TestUser(
+    email='smthufj@gmail.com',
+    fullName='Test User',
+    password='password123321',
+    passwordRepeat='password123321',
+    roles=['USER']
+)
+
+print(f'verified: {user.verified}')
+print(f'banned: {user.banned}')
+
+print(user.model_dump())
+print(user.model_dump_json())
+print(user.model_dump_json(exclude_unset=True))
+print(user.model_dump_json(exclude_none=True))
+
+print("\n=============== Сравнение model_dump и model_dump_json ===============")
+print("model_dump():")
+print(user.model_dump())
+print("\nТип roles в model_dump():", type(user.model_dump()['roles'][0]))
+
+print("\nmodel_dump_json():")
+print(user.model_dump_json())
+print("\nТип roles в model_dump_json():", type(user.model_dump_json()))
+
+title("6. extra: что делать с лишними полями")
+
+print("-- ignore (по умолчанию) --")
+p_ignore = MoviesPage(**payloads.WITH_EXTRA_FIELDS)
+print("   объект создался, totalRevenue доступен?", hasattr(p_ignore, "totalRevenue"))
+
+class MoviesPageAllow(MoviesPage):
+    model_config = ConfigDict(extra="allow")
+
+print("-- allow --")
+p_allow = MoviesPageAllow(**payloads.WITH_EXTRA_FIELDS)
+print("   model_extra          :", p_allow.model_extra)
+print("   доступ .totalRevenue :", p_allow.totalRevenue)
+
+class MoviesPageForbid(MoviesPage):
+    model_config = ConfigDict(extra="forbid")
+
+print("-- forbid --")
+try:
+    MoviesPageForbid(**payloads.WITH_EXTRA_FIELDS)
+except ValidationError as e:
+    for err in e.errors():
+        print("   ", err["loc"], "->", err["msg"])
+
+title("7. strict: запрещаем приведение типов")
+
+class StrictMovie(Movie):
+    model_config = ConfigDict(strict=True)
+
+sample = dict(payloads.MOVIES_PAGE["movies"][0])
+sample["price"] = "130"          # цена пришла строкой
+
+print("-- lax --")
+print("   price ->", Movie(**sample).price, type(Movie(**sample).price).__name__)
+
+print("-- strict --")
+try:
+    StrictMovie(**sample)
+except ValidationError as e:
+    for err in e.errors():
+        print("   ", err["loc"], "->", err["msg"])
+
+title("8. strict=True для поля id")
+
+# Проверяем, что MOVIES_PAGE разбирается с strict id
+try:
+    page_strict = MoviesPage(**payloads.MOVIES_PAGE)
+    print("✅ MOVIES_PAGE успешно разобран")
+    print(f"   ID первого фильма: {page_strict.movies[0].id} (тип: {type(page_strict.movies[0].id).__name__})")
+except ValidationError as e:
+    print("❌ Ошибка валидации:")
+    for err in e.errors():
+        print(f"   {err['loc']} -> {err['msg']}")
+
+# Проверяем, что строка в id вызовет ошибку
+print("\n-- Проверка со строковым id --")
+bad_sample = dict(payloads.MOVIES_PAGE["movies"][0])
+bad_sample["id"] = "110"  # строка вместо числа
+
+try:
+    Movie(**bad_sample)
+except ValidationError as e:
+    print("❌ Ошибка валидации для id='110':")
+    for err in e.errors():
+        print(f"   {err['loc']} -> {err['msg']}")
+
+title("9. strict=True на всю модель Movie")
+
+print("-- Проверка с первым фильмом из MOVIES_PAGE --")
+sample = dict(payloads.MOVIES_PAGE["movies"][0])  # Берём первый фильм
+
+try:
+    StrictMovie(**sample)
+except ValidationError as e:
+    print("Ошибок:", len(e.errors()))
+    for err in e.errors():
+        print(f"   {'.'.join(str(p) for p in err['loc'])} -> {err['msg']}")
