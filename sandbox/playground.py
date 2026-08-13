@@ -4,7 +4,7 @@ import sys
 from pydantic import ConfigDict, ValidationError
 
 from sandbox import payloads
-from sandbox.models import Movie, MovieDetails, MoviesPage, TestUser
+from sandbox.models import Movie, MovieDetails, MoviesPage, TestUser, Card, CardType, TypeCard
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -158,3 +158,33 @@ except ValidationError as e:
     print("Ошибок:", len(e.errors()))
     for err in e.errors():
         print(f"   {'.'.join(str(p) for p in err['loc'])} -> {err['msg']}")
+
+title('Проверка валидатора')
+try:
+    Card(pan="1111ABCD33334444", cvc="123")
+except ValidationError as e:
+    print(e)
+
+print(CardType.VISA.value)
+
+# title('Проверка model_validator')
+# TypeCard(pan="ABC", cvc="1", card_type="MIR")
+
+title('Проверка валидации повтора пароля TestUser')
+TestUser(
+    email='ewfe12313f@gmail.com',
+    fullName='Grig Grog',
+    password='qwertyuiop',
+    passwordRepeat='qwertyuiop'
+)
+
+title('Проверка валидации почты TestUser')
+try:
+    TestUser(
+        email='не-почта',
+        fullName='Grig Grog',
+        password='qwertyuiop',
+        passwordRepeat='qwertyuiop'
+    )
+except ValidationError as e:
+    print(e)
