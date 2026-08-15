@@ -7,6 +7,7 @@ from utils.data_generator import DataGenerator
 from resources.admin_creds import SuperAdminCreds
 from entities.user import User
 from constants.roles import Roles
+from models.base_models import TestUser
 
 load_dotenv()
 
@@ -21,15 +22,15 @@ def api_manager(session):
     return ApiManager(session)
 
 @pytest.fixture(scope="function")
-def test_user():
+def test_user() -> TestUser:
     password = DataGenerator.generate_random_password()
-    return {
-        "email": DataGenerator.generate_random_email(),
-        "fullName": DataGenerator.generate_random_name(),
-        "password": password,
-        "passwordRepeat": password,
-        "roles": [Roles.USER]
-    }
+    return TestUser(
+        email=DataGenerator.generate_random_email(),
+        fullName=DataGenerator.generate_random_name(),
+        password=password,
+        passwordRepeat=password,
+        roles=[Roles.USER]
+    )
 
 @pytest.fixture(scope="function")
 def registered_user(api_manager, test_user):
@@ -178,21 +179,16 @@ def super_admin(user_session):
     return super_admin
 
 @pytest.fixture
-def creation_user_data(test_user):
-    updated_data = test_user.copy()
-    updated_data.update({
-        'verified': True,
-        'banned': False
-    })
-    return updated_data
+def creation_user_data(test_user: TestUser) -> TestUser:
+    return test_user.model_copy(update={'verified': True, 'banned': False})
 
 @pytest.fixture
 def common_user(user_session, super_admin, creation_user_data):
     new_session = user_session()
 
     common_user = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        creation_user_data.email,
+        creation_user_data.password,
         [Roles.USER.value],
         new_session
     )
@@ -206,8 +202,8 @@ def admin_user(user_session, super_admin, creation_user_data):
     new_session = user_session()
 
     admin_user = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        creation_user_data.email,
+        creation_user_data.password,
         [Roles.ADMIN.value],
         new_session
     )

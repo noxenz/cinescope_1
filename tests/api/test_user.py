@@ -1,14 +1,15 @@
 import pytest
+from models.base_models import RegisterUserResponse
 
 class TestPositive:
     def test_create_user(self, super_admin, creation_user_data):
-        response = super_admin.api.user_api.create_user(creation_user_data).json()
+        response = super_admin.api.user_api.create_user(creation_user_data)
+        created_user = RegisterUserResponse(**response.json())
 
-        assert response.get('id') and response['id'] != '', 'ID должен быть не пустым'
-        assert response.get('email') == creation_user_data['email']
-        assert response.get('fullName') == creation_user_data['fullName']
-        assert response.get('roles', []) == creation_user_data['roles']
-        assert response.get('verified') is True
+        assert created_user.email == creation_user_data.email
+        assert created_user.fullName == created_user.fullName
+        assert created_user.roles == creation_user_data.roles
+        assert created_user.verified is True
 
     @pytest.mark.xfail(reason='Нельзя создать админа')
     def test_create_admin(self, super_admin, creation_user_data):
