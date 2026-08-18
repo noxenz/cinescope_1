@@ -191,7 +191,7 @@ except ValidationError as e:
 
 import requests
 
-title('RANDOM')
+title('Check Real Response')
 AUTH_BASE_URL = 'https://auth.dev-cinescope.coconutqa.ru'
 REGISTER = '/register'
 
@@ -199,7 +199,7 @@ def check_real_response():
     response = requests.post(
         f"{AUTH_BASE_URL}{REGISTER}",  # Собираем полный URL
         json={
-            "email": "testkfgebhrjuwhkubwefkhi@example.com",
+            "email": "pdepmedl83r9@example.com",
             "fullName": "Test User",
             "password": "SecurePass123",
             "passwordRepeat": "SecurePass123"

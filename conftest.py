@@ -7,7 +7,7 @@ from utils.data_generator import DataGenerator
 from resources.admin_creds import SuperAdminCreds
 from entities.user import User
 from constants.roles import Roles
-from models.base_models import TestUser
+from models.base_models import TestUser, RegisterUserResponse
 
 load_dotenv()
 
@@ -35,8 +35,7 @@ def test_user() -> TestUser:
 @pytest.fixture(scope="function")
 def registered_user(api_manager, test_user):
     response = api_manager.auth_api.register_user(test_user).json()
-    test_user["id"] = response["id"]
-    return test_user
+    return RegisterUserResponse(**response)
 
 @pytest.fixture
 def login_data(registered_user):

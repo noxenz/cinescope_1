@@ -21,7 +21,6 @@ class TestUser(BaseModel):
 
     @field_validator("passwordRepeat")
     def check_password_repeat(cls, value: str, info) -> str:
-        """passwordRepeat обязан совпадать с password."""
         if "password" in info.data and value != info.data["password"]:
             raise ValueError("passwordRepeat не совпадает с password")
         return value
@@ -29,7 +28,7 @@ class TestUser(BaseModel):
 class RegisterUserResponse(BaseModel):
     """Ответ на POST /register и POST /user."""
 
-    id: str
+    id: str = Field(..., description='UUID пользователя')
     email: str = Field(..., pattern=EMAIL_PATTERN)
     fullName: str = Field(..., min_length=1, max_length=100)
     verified: bool

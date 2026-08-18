@@ -74,6 +74,7 @@ class TestUser(BaseModelForbid):
 
     @field_validator('passwordRepeat')
     def check_password_match(cls, value: str, info: ValidationInfo) -> str:
+        print("=== ВАЛИДАТОР ВЫЗВАН ===")
         password = info.data.get('password')
         if value != password:
             raise ValueError('Пароли не совпадают')

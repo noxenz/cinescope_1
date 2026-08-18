@@ -1,12 +1,13 @@
 import pytest
 import requests
+from models.base_models import TestUser
 
 class TestAuth:
     def test_register_user(self, api_manager, test_user):
         response = api_manager.auth_api.register_user(test_user)
         response_data = response.json()
 
-        assert response_data["email"] == test_user["email"]
+        assert response_data["email"] == test_user.email
         assert "id" in response_data
         assert "USER" in response_data["roles"]
 
