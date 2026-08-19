@@ -18,7 +18,7 @@ class CustomRequester:
         self.session.headers.update(self.base_headers)
         self.logger = logging.getLogger(__name__)
 
-    def send_request(self, method, endpoint, data: BaseModel | dict| None = None, params=None, expected_status=200, need_logging=True, **kwargs):
+    def send_request(self, method, endpoint, data: BaseModel | dict | None = None, params=None, expected_status=200, need_logging=True, **kwargs):
         url = f'{self.base_url}{endpoint}'
 
         if isinstance(data, BaseModel):

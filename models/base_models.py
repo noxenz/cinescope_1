@@ -34,6 +34,7 @@ class RegisterUserResponse(BaseModel):
     verified: bool
     roles: list[Roles]
     createdAt: datetime
+    banned: bool
 
 def get_user(test_user):
     return test_user

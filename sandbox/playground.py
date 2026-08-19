@@ -199,7 +199,7 @@ def check_real_response():
     response = requests.post(
         f"{AUTH_BASE_URL}{REGISTER}",  # Собираем полный URL
         json={
-            "email": "pdepmedl83r9@example.com",
+            "email": "pdepmedl83r49@example.com",
             "fullName": "Test User",
             "password": "SecurePass123",
             "passwordRepeat": "SecurePass123"

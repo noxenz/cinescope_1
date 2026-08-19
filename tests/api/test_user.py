@@ -1,4 +1,5 @@
 import pytest
+from constants.roles import Roles
 from models.base_models import RegisterUserResponse
 
 class TestPositive:
@@ -7,28 +8,34 @@ class TestPositive:
         created_user = RegisterUserResponse(**response.json())
 
         assert created_user.email == creation_user_data.email
-        assert created_user.fullName == created_user.fullName
+        assert created_user.fullName == creation_user_data.fullName
         assert created_user.roles == creation_user_data.roles
         assert created_user.verified is True
 
     @pytest.mark.xfail(reason='Нельзя создать админа')
     def test_create_admin(self, super_admin, creation_user_data):
+        creation_user_data.roles = [Roles.ADMIN]
         response = super_admin.api.user_api.create_user(creation_user_data).json()
+        created_user = RegisterUserResponse(**response)
 
-        assert response.get('email') == creation_user_data['email']
-        assert response.get('roles', []) == creation_user_data['roles']
+        assert created_user.email == creation_user_data.email
+        assert created_user.roles == creation_user_data.roles
 
     def test_get_user_by_id(self, super_admin, creation_user_data):
-        created_user_response = super_admin.api.user_api.create_user(creation_user_data).json()
-        response_by_id = super_admin.api.user_api.get_user_info(created_user_response['id']).json()
-        response_by_email = super_admin.api.user_api.get_user_info(creation_user_data['email']).json()
+        response = super_admin.api.user_api.create_user(creation_user_data).json()
+        created_user = RegisterUserResponse(**response)
 
-        assert response_by_id == response_by_email, "Содержание ответов должно быть идентичным"
-        assert response_by_id.get('id') and response_by_id['id'] != '', "ID должен быть не пустым"
-        assert response_by_id.get('email') == creation_user_data['email']
-        assert response_by_id.get('fullName') == creation_user_data['fullName']
-        assert response_by_id.get('roles', []) == creation_user_data['roles']
-        assert response_by_id.get('verified') is True
+        response_by_id = super_admin.api.user_api.get_user_info(created_user.id).json()
+        user_by_id = RegisterUserResponse(**response_by_id)
+
+        response_by_email = super_admin.api.user_api.get_user_info(creation_user_data.email).json()
+        user_by_email = RegisterUserResponse(**response_by_email)
+
+        assert user_by_id == user_by_email, "Содержание ответов должно быть идентичным"
+        assert user_by_id.email == creation_user_data.email
+        assert user_by_id.fullName == creation_user_data.fullName
+        assert user_by_id.roles == creation_user_data.roles
+        assert user_by_id.verified is True
 
     def test_get_user_by_id_common_user(self, common_user):
         common_user.api.user_api.get_user_info(common_user.email, expected_status=403)
@@ -41,12 +48,13 @@ class TestPositive:
             assert response.json() == {}
 
     def test_get_user_info(self, admin_api_manager, registered_user):
-        user_id = registered_user['id']
+        user_id = registered_user.id
 
-        response = admin_api_manager.user_api.get_user_info(user_id)
-        assert response.json()['email'] == registered_user['email']
-        assert response.json()['id'] == registered_user['id']
+        response = admin_api_manager.user_api.get_user_info(user_id).json()
+        user_data = RegisterUserResponse(**response)
+        assert user_data.email == registered_user.email
+        assert user_data.id == registered_user.id
 
     def test_get_user_info_unauth(self, unauth_api_manager, registered_user):
-        user_id = registered_user['id']
+        user_id = registered_user.id
         unauth_api_manager.user_api.get_user_info(user_id, expected_status=401)

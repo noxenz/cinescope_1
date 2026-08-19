@@ -21,7 +21,7 @@ class DataGenerator:
 
     @staticmethod
     def generate_random_name():
-        return fake.first_name() + ' ' + fake.last_name() + str(uuid.uuid4())
+        return fake.first_name() + ' ' + fake.last_name() + ' ' + fake.last_name()
 
     @staticmethod
     def generate_random_price():

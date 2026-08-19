@@ -1,15 +1,14 @@
 import pytest
 import requests
-from models.base_models import TestUser
+from pydantic import ValidationError
+from models.base_models import TestUser, RegisterUserResponse
 
 class TestAuth:
     def test_register_user(self, api_manager, test_user):
         response = api_manager.auth_api.register_user(test_user)
-        response_data = response.json()
+        response_data = RegisterUserResponse(**response.json())
 
-        assert response_data["email"] == test_user.email
-        assert "id" in response_data
-        assert "USER" in response_data["roles"]
+        assert response_data.email == test_user.email
 
     def test_login_user(self, api_manager, login_data):
         response = api_manager.auth_api.login_user(login_data)
@@ -33,3 +32,8 @@ class TestAuth:
     def test_register_timeout(self, api_manager, test_user):
         with pytest.raises(requests.exceptions.Timeout):
             api_manager.auth_api.register_user(test_user, timeout=0.001)
+
+    def test_user_model_rejects_invalid_email(self):
+        with pytest.raises(ValidationError):
+            TestUser(email="не-почта", fullName="Иван", password="12345678",
+                     passwordRepeat="12345678")

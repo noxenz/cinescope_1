@@ -38,10 +38,10 @@ def registered_user(api_manager, test_user):
     return RegisterUserResponse(**response)
 
 @pytest.fixture
-def login_data(registered_user):
+def login_data(registered_user, test_user):
     return {
-        'email': registered_user['email'],
-        'password': registered_user['password']
+        'email': registered_user.email,
+        'password': test_user.password
     }
 
 @pytest.fixture(scope="session")
