@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 
 from constants.roles import Roles
+from constants.locations import Locations
 
 EMAIL_PATTERN = r'^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 
@@ -26,8 +27,6 @@ class TestUser(BaseModel):
         return value
 
 class RegisterUserResponse(BaseModel):
-    """Ответ на POST /register и POST /user."""
-
     id: str = Field(..., description='UUID пользователя')
     email: str = Field(..., pattern=EMAIL_PATTERN)
     fullName: str = Field(..., min_length=1, max_length=100)
@@ -35,6 +34,22 @@ class RegisterUserResponse(BaseModel):
     roles: list[Roles]
     createdAt: datetime
     banned: bool
+
+class GenreResponse(BaseModel):
+    name: str
+
+class MovieResponse(BaseModel):
+    id: int
+    name: str
+    price: int
+    description: str
+    imageUrl: Optional[str]
+    location: Locations
+    published: bool
+    genreId: int
+    genre: GenreResponse
+    createdAt: str
+    rating: float = Field(ge=0)
 
 def get_user(test_user):
     return test_user
