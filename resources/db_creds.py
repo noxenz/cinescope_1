@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class PostgresCreds:
+class MoviesDbCreds:
     HOST = os.getenv('DB_HOST')
     PORT = os.getenv('DB_PORT')
     DATABASE = os.getenv('DB_DATABASE')
