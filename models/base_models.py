@@ -43,7 +43,7 @@ class MovieResponse(BaseModel):
     name: str
     price: int
     description: str
-    imageUrl: Optional[str]
+    imageUrl: str
     location: Locations
     published: bool
     genreId: int
