@@ -20,7 +20,7 @@ class AuthApi(CustomRequester):
             **kwargs
         )
 
-    def login_user(self, login_data, expected_status=201, **kwargs):
+    def login_user(self, login_data, expected_status=200, **kwargs):
         return self.send_request(
             method='POST',
             endpoint=LOGIN,
@@ -37,7 +37,7 @@ class AuthApi(CustomRequester):
             **kwargs
         )
 
-    def refresh_token(self, expected_status=201, **kwargs):
+    def refresh_token(self, expected_status=200, **kwargs):
         response = self.send_request(
             method='GET',
             endpoint=REFRESH_TOKEN,
