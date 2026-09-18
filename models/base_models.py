@@ -36,6 +36,7 @@ class RegisterUserResponse(BaseModel):
     banned: bool
 
 class GenreResponse(BaseModel):
+    id: int
     name: str
 
 class MovieResponse(BaseModel):
@@ -51,10 +52,15 @@ class MovieResponse(BaseModel):
     createdAt: str
     rating: float = Field(ge=0)
 
-def get_user(test_user):
-    return test_user
+class MovieReviewUserResponse(BaseModel):
+    fullName: str
 
-def test_user_data(test_user):
-    user = TestUser(**get_user(test_user))
-    assert user.email == test_user['email']
-    logger.info(f'{user.email} {user.fullName} {user.password} {user.passwordRepeat} {user.roles}')
+class MovieReviewResponse(BaseModel):
+    userId: str
+    rating: float = Field(ge=0)
+    text: str
+    createdAt: str
+    user: MovieReviewUserResponse
+
+class FindOneMovieResponse(MovieResponse):
+    reviews: list[MovieReviewResponse]
