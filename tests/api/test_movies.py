@@ -2,7 +2,6 @@ import allure
 from pytest_check import check
 import pytest
 from constants.roles import Roles
-from models.base_models import MovieResponse, FindOneMovieResponse
 from utils.assertions import validate_movies_response, validate_movie_response
 
 @allure.epic('Movies API')
@@ -27,6 +26,7 @@ class TestPositive:
     @allure.story('Получение списка фильмов')
     @allure.title('Получение списка фильмов обычным пользователем')
     @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.smoke
     def test_get_movies_list_by_common_user(self, common_user):
         with allure.step('ОТправка запроса GET /movies авторизованным пользователем'):
             response = common_user.api.movies_api.get_movies_list().json()
@@ -41,6 +41,7 @@ class TestPositive:
     @allure.story('Получение списка фильмов')
     @allure.title('Параметризированная фильтрация фильмов')
     @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.regression
     @pytest.mark.parametrize('filter_params,expected_field,expected_value', [
         ({'minPrice': 100, 'maxPrice': 500}, 'price', lambda p: 100 <= p <= 500),
         ({'locations': 'MSK'}, 'location', 'MSK'),
@@ -107,39 +108,11 @@ class TestPositive:
             movie_in_db = db_helper.get_movie_by_id(movie_id)
             assert movie_in_db is None, f'Фильм {movie_id} присутствует в БД'
 
-    @allure.story('Удаление фильма')
-    @allure.title('Удаление фильма по ID разными ролями')
-    @allure.severity(allure.severity_level.CRITICAL)
-    @pytest.mark.regression
-    @pytest.mark.parametrize('role,expected_status', [
-        (Roles.ADMIN.value, 403),
-        (Roles.USER.value, 403),
-        ('unauth', 401)
-    ], ids=['admin_cannot_delete', 'common_user_cannot_delete', 'unauth_cannot_delete'])
-    def test_delete_movie_by_id(self, request, create_movie, role, expected_status, db_helper):
-        movie_id = create_movie['id']
-
-        with allure.step(f'Получение API менеджера для роли {role}'):
-            if role == 'unauth':
-                api_manager = request.getfixturevalue('unauth_api_manager')
-            else:
-                if role == Roles.ADMIN.value:
-                    user = request.getfixturevalue('admin_user')
-                elif role == Roles.USER.value:
-                    user = request.getfixturevalue('common_user')
-                else:
-                    raise ValueError(f'Неизвестная роль {role}')
-
-                api_manager = user.api
-
-        with allure.step(f'Попытка удалить фильм {movie_id} пользователем с ролья {role}'):
-            api_manager.movies_api.delete_movie_by_id(movie_id, expected_status=expected_status)
-
     @allure.story('Обновление фильма')
     @allure.title('Обновление фильма по ID суперадмином')
     @allure.severity(allure.severity_level.CRITICAL)
     @pytest.mark.smoke
-    def test_update_movie_by_id(self, super_admin, create_movie, update_movie_data):
+    def test_update_movie_by_id(self, super_admin, create_movie, update_movie_data, db_helper):
         movie_id = create_movie['id']
 
         with allure.step(f'Отправка PATCH запроса на обновление фильма {movie_id}'):
@@ -152,6 +125,12 @@ class TestPositive:
             assert response['id'] == movie_id
             assert response['name'] == update_movie_data['name']
             assert response['price'] == update_movie_data['price']
+
+        with allure.step('Проверка, что данные обновились в БД'):
+            movie_in_db = db_helper.get_movie_by_id(movie_id)
+            assert movie_in_db is not None
+            assert movie_in_db.name == update_movie_data['name']
+            assert movie_in_db.price == update_movie_data['price']
 
 @allure.epic('Movies API')
 @allure.feature('Фильмы (негативные сценарии)')
@@ -175,3 +154,32 @@ class TestNegative:
 
         with allure.step('Попытка обновить фильм без прав'):
             common_user.api.movies_api.update_movie_by_id(movie_id, update_movie_data, expected_status=403)
+
+    @allure.story('Удаление фильма')
+    @allure.title('Удаление фильма по ID разными ролями')
+    @allure.severity(allure.severity_level.CRITICAL)
+    @pytest.mark.regression
+    @pytest.mark.negative
+    @pytest.mark.parametrize('role,expected_status', [
+        (Roles.ADMIN.value, 403),
+        (Roles.USER.value, 403),
+        ('unauth', 401)
+    ], ids=['admin_cannot_delete', 'common_user_cannot_delete', 'unauth_cannot_delete'])
+    def test_delete_movie_by_id(self, request, create_movie, role, expected_status):
+        movie_id = create_movie['id']
+
+        with allure.step(f'Получение API менеджера для роли {role}'):
+            if role == 'unauth':
+                api_manager = request.getfixturevalue('unauth_api_manager')
+            else:
+                if role == Roles.ADMIN.value:
+                    user = request.getfixturevalue('admin_user')
+                elif role == Roles.USER.value:
+                    user = request.getfixturevalue('common_user')
+                else:
+                    raise ValueError(f'Неизвестная роль {role}')
+
+                api_manager = user.api
+
+        with allure.step(f'Попытка удалить фильм {movie_id} пользователем с ролья {role}'):
+            api_manager.movies_api.delete_movie_by_id(movie_id, expected_status=expected_status)
