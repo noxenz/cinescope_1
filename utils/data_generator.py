@@ -13,12 +13,11 @@ class DataGenerator:
         'name': f'Test Movie {DataGenerator.generate_random_string(5)}',
         'price': DataGenerator.generate_random_int(100, 1000),
         'description': DataGenerator.generate_random_description(),
-        'imageUrl': f'https://test.com/{DataGenerator.generate_random_string(8)}.jpg',
+        'image_url': f'https://test.com/{DataGenerator.generate_random_string(8)}.jpg',
         'location': DataGenerator.generate_random_location(),
         'published': True,
         'rating': DataGenerator.generate_random_rating(),
-        'genreId': DataGenerator.generate_random_int(7, 10),
-        # 'created_at': datetime.datetime.now()
+        'genre_id': DataGenerator.generate_random_int(7, 10)
         }
 
     @staticmethod

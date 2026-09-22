@@ -52,6 +52,13 @@ class MovieResponse(BaseModel):
     createdAt: str
     rating: float = Field(ge=0)
 
+class FindAllMoviesResponse(BaseModel):
+    movies: list[MovieResponse]
+    count: int
+    page: int
+    pageSize: int
+    pageCount: int
+
 class MovieReviewUserResponse(BaseModel):
     fullName: str
 

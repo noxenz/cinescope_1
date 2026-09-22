@@ -11,6 +11,9 @@ from models.base_models import TestUser, RegisterUserResponse
 from sqlalchemy.orm import Session
 from db_requester.db_client import get_db_session
 from db_requester.helpers import DBHelper
+import logging
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -231,6 +234,8 @@ def created_test_user(db_helper):
     yield user
     if db_helper.get_user_by_id(user.id):
         db_helper.delete_user(user)
+    else:
+        logger.warning(f'Пользователь {user.id} не найден')
 
 @pytest.fixture
 def created_test_movie(db_helper):
@@ -238,3 +243,5 @@ def created_test_movie(db_helper):
     yield movie
     if db_helper.get_movie_by_id(movie.id):
         db_helper.delete_movie(movie)
+    else:
+        logger.warning(f'Пользователь {movie.id} не найден')
