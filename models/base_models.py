@@ -2,17 +2,15 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, EmailStr
 
 from constants.roles import Roles
 from constants.locations import Locations
 
-EMAIL_PATTERN = r'^[a-zA-Z0-9._]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-
 logger = logging.getLogger(__name__)
 
 class TestUser(BaseModel):
-    email: str = Field(..., pattern=EMAIL_PATTERN, description='Email пользователя')
+    email: EmailStr
     fullName: str = Field(..., min_length=1, max_length=100)
     password: str = Field(..., min_length=8, max_length=20)
     passwordRepeat: str = Field(..., min_length=8, max_length=20)
@@ -28,7 +26,7 @@ class TestUser(BaseModel):
 
 class RegisterUserResponse(BaseModel):
     id: str = Field(..., description='UUID пользователя')
-    email: str = Field(..., pattern=EMAIL_PATTERN)
+    email: EmailStr
     fullName: str = Field(..., min_length=1, max_length=100)
     verified: bool
     roles: list[Roles]
@@ -44,7 +42,7 @@ class MovieResponse(BaseModel):
     name: str
     price: int
     description: str
-    imageUrl: str
+    imageUrl: Optional[str] = None
     location: Locations
     published: bool
     genreId: int

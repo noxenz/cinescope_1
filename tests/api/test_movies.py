@@ -2,7 +2,8 @@ import allure
 from pytest_check import check
 import pytest
 from constants.roles import Roles
-from utils.assertions import validate_movies_response, validate_movie_response, validate_created_or_updated_movie
+from utils.assertions import validate_response
+from models.base_models import MovieResponse, FindOneMovieResponse, FindAllMoviesResponse
 
 @allure.epic('Movies API')
 @allure.feature('Фильмы')
@@ -12,7 +13,7 @@ class TestPositive:
     @allure.title('Получение списка фильмов без авторизации')
     @allure.severity(allure.severity_level.CRITICAL)
     @pytest.mark.smoke
-    @pytest.mark.xfail(reason='genre.id отсутствует в ответе / imageUrl может быть None')
+    @pytest.mark.xfail(reason='genre.id отсутствует в ответе')
     def test_get_movies_list_unauthorized(self, unauth_api_manager):
         with allure.step('Отправка запроса GET /movies без авторизации'):
             response = unauth_api_manager.movies_api.get_movies_list().json()
@@ -22,13 +23,13 @@ class TestPositive:
             assert isinstance(response['movies'], list)
 
         with allure.step('Проверка структуры ответа'):
-            validate_movies_response(response)
+            validate_response(FindAllMoviesResponse, response)
 
     @allure.story('Получение списка фильмов')
     @allure.title('Получение списка фильмов обычным пользователем')
     @allure.severity(allure.severity_level.NORMAL)
     @pytest.mark.smoke
-    @pytest.mark.xfail(reason='genre.id отсутствует в ответе / imageUrl может быть None')
+    @pytest.mark.xfail(reason='genre.id отсутствует в ответе')
     def test_get_movies_list_by_common_user(self, common_user):
         with allure.step('ОТправка запроса GET /movies авторизованным пользователем'):
             response = common_user.api.movies_api.get_movies_list().json()
@@ -38,7 +39,7 @@ class TestPositive:
             assert isinstance(response['movies'], list)
 
         with allure.step('Проверка структуры ответа'):
-            validate_movies_response(response)
+            validate_response(FindAllMoviesResponse, response)
 
     @allure.story('Получение списка фильмов')
     @allure.title('Параметризированная фильтрация фильмов')
@@ -78,7 +79,7 @@ class TestPositive:
             assert movie_in_db.name == movie_data['name']
 
         with allure.step('Проверка структуры ответа через Pydantic'):
-            validate_created_or_updated_movie(create_movie)
+            validate_response(MovieResponse, create_movie)
 
     @allure.story('Получение фильма по ID')
     @allure.title('Получение фильма по ID без авторизации')
@@ -92,7 +93,7 @@ class TestPositive:
             response = unauth_api_manager.movies_api.get_movie_by_id(movie_id).json()
 
         with allure.step('Проверка ответа через Pydantic'):
-            validate_movie_response(response)
+            validate_response(FindOneMovieResponse, response)
 
         with allure.step('Проверка соответствия данных'):
             assert response['id'] == movie_id
@@ -135,7 +136,7 @@ class TestPositive:
             assert movie_in_db.price == update_movie_data['price']
 
         with allure.step('Проверка ответа через Pydantic'):
-            validate_created_or_updated_movie(response)
+            validate_response(MovieResponse, response)
 
 @allure.epic('Movies API')
 @allure.feature('Фильмы (негативные сценарии)')
