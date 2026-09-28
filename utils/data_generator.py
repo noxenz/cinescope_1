@@ -2,7 +2,7 @@ from faker import Faker
 import random
 import string
 from uuid import uuid4
-import datetime
+from datetime import datetime
 
 fake = Faker()
 
@@ -17,7 +17,8 @@ class DataGenerator:
         'location': DataGenerator.generate_random_location(),
         'published': True,
         'rating': DataGenerator.generate_random_rating(),
-        'genre_id': DataGenerator.generate_random_int(7, 10)
+        'genre_id': DataGenerator.generate_random_int(7, 10),
+        'created_at': datetime.now()
         }
 
     @staticmethod
@@ -27,8 +28,8 @@ class DataGenerator:
             'email': DataGenerator.generate_random_email(),
             'full_name': DataGenerator.generate_random_name(),
             'password': DataGenerator.generate_random_password(),
-            'created_at': datetime.datetime.now(),
-            'updated_at': datetime.datetime.now(),
+            'created_at': datetime.now(),
+            'updated_at': datetime.now(),
             'verified': False,
             'banned': False,
             'roles': '{USER}'

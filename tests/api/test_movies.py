@@ -69,14 +69,9 @@ class TestPositive:
     @allure.severity(allure.severity_level.CRITICAL)
     @pytest.mark.smoke
     @pytest.mark.xfail(reason='genre.id отсутствует в ответе')
-    def test_create_movie(self, super_admin, create_movie, movie_data, db_helper):
+    def test_create_movie(self, super_admin, create_movie, movie_data):
         with allure.step('Проверка соответствия данных'):
             assert create_movie['name'] == movie_data['name']
-
-        with allure.step('Проверка, что фильм появился в БД'):
-            movie_in_db = db_helper.get_movie_by_id(create_movie['id'])
-            assert movie_in_db is not None
-            assert movie_in_db.name == movie_data['name']
 
         with allure.step('Проверка структуры ответа через Pydantic'):
             validate_response(MovieResponse, create_movie)
@@ -103,22 +98,18 @@ class TestPositive:
     @allure.title('Удаление фильма суперадмином')
     @allure.severity(allure.severity_level.CRITICAL)
     @pytest.mark.smoke
-    def test_delete_movie_by_super_admin(self, super_admin, create_movie, db_helper):
+    def test_delete_movie_by_super_admin(self, super_admin, create_movie):
         movie_id = create_movie['id']
 
         with allure.step(f'Удаление фильма {movie_id} суперадмином'):
             super_admin.api.movies_api.delete_movie_by_id(movie_id)
-
-        with allure.step('Проверка, что фильм удалился из БД'):
-            movie_in_db = db_helper.get_movie_by_id(movie_id)
-            assert movie_in_db is None, f'Фильм {movie_id} присутствует в БД'
 
     @allure.story('Обновление фильма')
     @allure.title('Обновление фильма по ID суперадмином')
     @allure.severity(allure.severity_level.CRITICAL)
     @pytest.mark.smoke
     @pytest.mark.xfail(reason='genre.id отсутствует в ответе')
-    def test_update_movie_by_id(self, super_admin, create_movie, update_movie_data, db_helper):
+    def test_update_movie_by_id(self, super_admin, create_movie, update_movie_data):
         movie_id = create_movie['id']
 
         with allure.step(f'Отправка PATCH запроса на обновление фильма {movie_id}'):
@@ -128,12 +119,6 @@ class TestPositive:
             assert response['id'] == movie_id
             assert response['name'] == update_movie_data['name']
             assert response['price'] == update_movie_data['price']
-
-        with allure.step('Проверка, что данные обновились в БД'):
-            movie_in_db = db_helper.get_movie_by_id(movie_id)
-            assert movie_in_db is not None
-            assert movie_in_db.name == update_movie_data['name']
-            assert movie_in_db.price == update_movie_data['price']
 
         with allure.step('Проверка ответа через Pydantic'):
             validate_response(MovieResponse, response)

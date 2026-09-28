@@ -51,3 +51,10 @@ class DBHelper:
     def delete_movie(self, movie: MovieDBModel):
         self.db_session.delete(movie)
         self.db_session.commit()
+
+    def update_movie(self, movie: MovieDBModel, **kwargs):
+        for key, value in kwargs.items():
+            setattr(movie, key, value)
+        self.db_session.commit()
+        self.db_session.refresh(movie)
+        return movie

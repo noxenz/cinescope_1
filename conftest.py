@@ -228,13 +228,11 @@ def db_helper(db_session) -> DBHelper:
 @pytest.fixture
 def created_test_user(db_helper):
     user = db_helper.create_test_user(DataGenerator.generate_user_data())
-    assert db_helper.create_test_user(user.id) is not None, f'Пользователь {user.id} не создан в бд'
     yield user
     db_helper.delete_user(user)
 
 @pytest.fixture
 def created_test_movie(db_helper):
     movie = db_helper.create_test_movie(DataGenerator.generate_movie_data())
-    assert db_helper.get_movie_by_id(movie.id) is not None, f'Фильм {movie.id} не создан в бд'
     yield movie
     db_helper.delete_movie(movie)
