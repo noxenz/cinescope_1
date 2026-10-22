@@ -6,7 +6,7 @@ class TestAuth:
         response = api_manager.auth_api.register_user(test_user)
         response_data = response.json()
 
-        assert response_data["email"] == test_user["email"]
+        assert response_data["email"] == test_user.email
         assert "id" in response_data
         assert "USER" in response_data["roles"]
 

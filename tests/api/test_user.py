@@ -7,12 +7,12 @@ class TestPositive:
             assert response.json() == {}
 
     def test_get_user_info(self, admin_api_manager, registered_user):
-        user_id = registered_user['id']
+        user_id = registered_user.id
 
         response = admin_api_manager.user_api.get_user_info(user_id)
-        assert response.json()['email'] == registered_user['email']
-        assert response.json()['id'] == registered_user['id']
+        assert response.json()['email'] == registered_user.email
+        assert response.json()['id'] == registered_user.id
 
     def test_get_user_info_unauth(self, unauth_api_manager, registered_user):
-        user_id = registered_user['id']
+        user_id = registered_user.id
         unauth_api_manager.user_api.get_user_info(user_id, expected_status=401)
