@@ -11,6 +11,14 @@ from models.base_models import TestUser, RegisterUserResponse
 from sqlalchemy.orm import Session
 from db_requester.db_client import get_db_session
 from db_requester.helpers import DBHelper
+from playwright.sync_api import Page
+from utils.tools import Tools
+
+from pages.register_page import CinescopeRegisterPage
+from pages.login_page import CinescopeLoginPage
+from pages.movie_page import CinescopeMoviePage
+
+DEFAULT_UI_TIMEOUT = 30000
 
 load_dotenv()
 
@@ -236,3 +244,53 @@ def created_test_movie(db_helper):
     movie = db_helper.create_test_movie(DataGenerator.generate_movie_data())
     yield movie
     db_helper.delete_movie(movie)
+
+@pytest.fixture(scope='session')
+def browser(playwright):
+    browser = playwright.chromium.launch(headless=False)
+    yield browser
+    browser.close()
+
+@pytest.fixture
+def context(browser):
+    context = browser.new_context()
+    context.tracing.start(screenshots=True, snapshots=True, sources=True)
+    context.set_default_timeout(DEFAULT_UI_TIMEOUT)
+    yield context
+    log_name = f'trace_{Tools.get_timestamp()}.zip'
+    trace_path = Tools.files_dir('playwright_trace', log_name)
+    context.tracing.stop(path=trace_path)
+    context.close()
+
+@pytest.fixture
+def page(context):
+    page = context.new_page()
+    yield page
+    page.close()
+
+@pytest.fixture
+def register_page(page: Page) -> CinescopeRegisterPage:
+    register_page = CinescopeRegisterPage(page)
+    register_page.open()
+    return register_page
+
+@pytest.fixture
+def login_page(page: Page) -> CinescopeLoginPage:
+    login_page = CinescopeLoginPage(page)
+    return login_page
+
+@pytest.fixture
+def logged_in_page(page):
+    page.goto("https://dev-cinescope.coconutqa.ru/login")
+    page.locator('[data-qa-id="login_email_input"]').fill(os.getenv('SUPER_ADMIN_EMAIL'))
+    page.locator('[data-qa-id="login_password_input"]').fill(os.getenv('SUPER_ADMIN_PASSWORD'))
+    page.locator('[data-qa-id="login_submit_button"]').click()
+    page.wait_for_timeout(2000)
+    page.reload()
+    page.wait_for_selector('[data-qa-id="profile_page_button"]', timeout=10000)
+
+    return page
+
+@pytest.fixture
+def movie_page(page):
+    return CinescopeMoviePage(page)
